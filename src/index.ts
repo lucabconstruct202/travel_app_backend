@@ -4,6 +4,9 @@ import cors from 'cors'
 import authRoutes from './routes/auth.routes'
 import elementRoutes from './routes/element.routes'
 import placesRoutes from './routes/places.routes'
+import elementExtrasRoutes from './routes/elementExtras.routes'
+import photoRoutes from './routes/photo.routes'
+
 
 dotenv.config()
 
@@ -15,6 +18,8 @@ app.use(express.json())
 
 app.use('/api', authRoutes)
 app.use('/api', elementRoutes)
+app.use('/api', elementExtrasRoutes)
 app.use('/api', placesRoutes)
+app.use('/api', photoRoutes)
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))

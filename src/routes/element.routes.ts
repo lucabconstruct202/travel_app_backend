@@ -6,7 +6,7 @@ const router = Router()
 
 router.get('/elements', authenticate, getUserElements)
 router.post('/elements/from-place', authenticate, createElementFromPlace)
-router.put('/elements/:id', authenticate, updateElement)
+router.patch('/elements/:id', authenticate, updateElement)
 router.delete('/elements/:id', authenticate, deleteElement)
 
 export default router

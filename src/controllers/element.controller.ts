@@ -2,6 +2,8 @@ import { Request, Response } from 'express'
 import axios from 'axios'
 import prisma from '../services/prisma'
 import { AuthenticatedRequest } from '../middleware/auth.middleware'
+import { DeleteObjectCommand } from '@aws-sdk/client-s3'
+import { deleteFromS3 } from '../services/s3.service'
 
 const GOOGLE_API_KEY = process.env.GOOGLE_PLACES_API_KEY
 
@@ -98,13 +100,6 @@ export const createElementFromPlace = async (
               create: notes.map((n: string) => ({
                 content: n,
                 userId: req.userId
-              }))
-            }
-          : undefined,
-        photos: photos.length
-          ? {
-              create: photos.map((url: string) => ({
-                fileUrl: url
               }))
             }
           : undefined,
@@ -215,9 +210,10 @@ export const deleteElement = async (req: AuthenticatedRequest, res: Response): P
   const { id } = req.params
 
   try {
-    // Optional: prüfen ob Element existiert und dem User gehört
+    // 1. Element holen inkl. Fotos
     const element = await prisma.element.findUnique({
       where: { id },
+      include: { photos: true },
     })
 
     if (!element || element.userId !== req.userId) {
@@ -225,9 +221,14 @@ export const deleteElement = async (req: AuthenticatedRequest, res: Response): P
       return
     }
 
-    await prisma.element.delete({
-      where: { id }
-    })
+    // 2. S3-Fotos löschen (nur wenn sie in unserem Bucket liegen)
+    for (const photo of element.photos) {
+      const key = photo.fileUrl.split('digitaloceanspaces.com/')[1]
+      await deleteFromS3(key)
+    }
+
+    // 3. Element aus der DB löschen (Cascade handled the rest)
+    await prisma.element.delete({ where: { id } })
 
     res.json({ message: 'Element and related data deleted successfully' })
   } catch (err) {
