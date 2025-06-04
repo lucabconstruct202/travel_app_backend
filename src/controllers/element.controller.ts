@@ -162,3 +162,77 @@ export const getUserElements = async (
   }
 }
 
+export const updateElement = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { id } = req.params
+  const {
+    name,
+    description,
+    category,
+    visited,
+    visitDate,
+    location,
+    city,
+    country,
+    street,
+    lat,
+    lng
+  } = req.body
+
+  try {
+    const element = await prisma.element.updateMany({
+      where: {
+        id,
+        userId: req.userId
+      },
+      data: {
+        name,
+        description,
+        category,
+        visited,
+        visitDate: visitDate ? new Date(visitDate) : undefined,
+        location,
+        city,
+        country,
+        street,
+        lat,
+        lng
+      }
+    })
+
+    if (element.count === 0) {
+      res.status(404).json({ error: 'Element not found or not authorized' })
+      return
+    }
+
+    res.json({ message: 'Element updated successfully' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update element' })
+  }
+}
+
+export const deleteElement = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const { id } = req.params
+
+  try {
+    // Optional: prüfen ob Element existiert und dem User gehört
+    const element = await prisma.element.findUnique({
+      where: { id },
+    })
+
+    if (!element || element.userId !== req.userId) {
+      res.status(404).json({ error: 'Element not found or not authorized' })
+      return
+    }
+
+    await prisma.element.delete({
+      where: { id }
+    })
+
+    res.json({ message: 'Element and related data deleted successfully' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete element' })
+  }
+}
+
