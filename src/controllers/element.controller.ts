@@ -46,12 +46,13 @@ export const createElementFromPlace = async (
     category,
     visited = false,
     visitDate,
-    rating,
+    selectedRating,
     notes = [],
     photos = [],
     tags = []
   } = req.body
-
+  console.log(req.userId)
+  console.log(req.body)
   if (!place_id || !category) {
     res.status(400).json({ error: 'Missing place_id or category' })
     return
@@ -79,16 +80,18 @@ export const createElementFromPlace = async (
         street: address.street,
         city: address.city,
         country: address.country,
+        googleMapId: place_id,
         lat,
         lng,
         visited,
         visitDate: visitDate ? new Date(visitDate) : undefined,
         userId: req.userId!,
         // Nested creation:
-        ratings: rating !== undefined
+        ratings: selectedRating !== null
         ? {
             create: {
-              rating,
+              rating:selectedRating,
+              googleMapId: place_id,
               user: {
                 connect: { id: req.userId! }
               }
@@ -105,11 +108,11 @@ export const createElementFromPlace = async (
           : undefined,
         tags: tags.length
           ? {
-              create: tags.map((t: string) => ({
+              create: tags.map((t: any) => ({
                 tag: {
                   connectOrCreate: {
-                    where: { name: t },
-                    create: { name: t }
+                    where: { name: t.tag.name },
+                    create: { name: t.tag.name }
                   }
                 }
               }))
@@ -117,6 +120,7 @@ export const createElementFromPlace = async (
           : undefined
       }
     })
+
 
     res.status(201).json(element)
   } catch (err) {
@@ -173,6 +177,9 @@ export const updateElement = async (req: AuthenticatedRequest, res: Response): P
     lng
   } = req.body
 
+  console.log('Updating element:', id, req.body)
+  const visiting = visitDate ? new Date(visitDate) : null
+  console.log('Visiting date:', visiting)
   try {
     const element = await prisma.element.updateMany({
       where: {
@@ -184,7 +191,7 @@ export const updateElement = async (req: AuthenticatedRequest, res: Response): P
         description,
         category,
         visited,
-        visitDate: visitDate ? new Date(visitDate) : undefined,
+        visitDate: visitDate ? new Date(visitDate) : null,
         location,
         city,
         country,

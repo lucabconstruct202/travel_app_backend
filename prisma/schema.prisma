@@ -9,32 +9,61 @@ generator client {
 
 model User {
   id           String     @id @default(uuid())
+  firstName    String
+  lastName     String
   email        String     @unique
   passwordHash String
   createdAt    DateTime   @default(now())
   programs     Program[]
   elements     Element[]
   ratings      Rating[] 
-  notes        Note[] 
+  notes        Note[]
+  groups       Group[] 
 }
 
 model Program {
-  id        String   @id @default(uuid())
-  name      String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  groups    Group[]
-  createdAt DateTime @default(now())
+  id           String             @id @default(uuid())
+  title        String
+  description  String?
+  startDate    DateTime?
+  endDate      DateTime?
+  createdAt    DateTime           @default(now())
+  user         User               @relation(fields: [userId], references: [id])
+  userId       String
+
+  timeranges   ProgramTimerange[]
 }
 
 model Group {
-  id        String   @id @default(uuid())
-  name      String
-  position  Int?
-  program   Program  @relation(fields: [programId], references: [id])
-  programId String
-  createdAt DateTime @default(now())
-  elements  GroupElement[]
+  id           String             @id @default(uuid())
+  title        String
+  description  String?
+  createdAt    DateTime           @default(now())
+  user         User               @relation(fields: [userId], references: [id])
+  userId       String
+
+  elements     GroupElement[]
+  timeranges   ProgramTimerangeGroup[]
+}
+
+model ProgramTimerange {
+  id           String                   @id @default(uuid())
+  startDate    DateTime
+  endDate      DateTime
+  program      Program                  @relation(fields: [programId], references: [id])
+  programId    String
+
+  groups       ProgramTimerangeGroup[]
+}
+
+model ProgramTimerangeGroup {
+  id               String             @id @default(uuid())
+  timerange        ProgramTimerange  @relation(fields: [timerangeId], references: [id])
+  timerangeId      String
+  group            Group             @relation(fields: [groupId], references: [id])
+  groupId          String
+
+  @@unique([timerangeId, groupId])
 }
 
 model Element {
@@ -43,7 +72,7 @@ model Element {
   description String?
 
   category    String?
-
+  googleMapId String?
   street      String?
   city        String?
   country     String?
@@ -75,16 +104,6 @@ model GroupElement {
   @@id([groupId, elementId])
 }
 
-model Rating {
-  id        String   @id @default(uuid())
-  rating    Int      @default(0)
-  element   Element  @relation(fields: [elementId], references: [id], onDelete: Cascade) // <—
-  elementId String
-  user      User     @relation(fields: [userId], references: [id])
-  userId    String
-  createdAt DateTime @default(now())
-}
-
 
 model Note {
   id        String   @id @default(uuid())
@@ -95,6 +114,18 @@ model Note {
   userId    String
   createdAt DateTime @default(now())
 }
+
+model Rating {
+  id        String   @id @default(uuid())
+  rating    Int      @default(0)
+  element   Element  @relation(fields: [elementId], references: [id], onDelete: Cascade)
+  googleMapId String?
+  elementId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  createdAt DateTime @default(now())
+}
+
 
 
 model Photo {

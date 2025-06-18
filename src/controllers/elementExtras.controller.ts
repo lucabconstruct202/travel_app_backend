@@ -42,10 +42,22 @@ export const updateNote = async (req: AuthenticatedRequest, res: Response) => {
 export const addRating = async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { rating } = req.body
+    const elementId = req.params.id
+
+    const element = await prisma.element.findUnique({
+      where: { id: elementId },
+      select: { googleMapId: true }
+    });
+
+    if (!element) {
+      res.status(404).json({ error: 'Element not found' });
+    }
+
     const newRating = await prisma.rating.create({
       data: {
         rating,
         elementId: req.params.id,
+        googleMapId: element!.googleMapId,
         userId: req.userId!
       }
     })

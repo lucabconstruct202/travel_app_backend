@@ -6,6 +6,8 @@ import elementRoutes from './routes/element.routes'
 import placesRoutes from './routes/places.routes'
 import elementExtrasRoutes from './routes/elementExtras.routes'
 import photoRoutes from './routes/photo.routes'
+import groupRoutes from './routes/group.routes'
+import programRoutes from './routes/program.routes'
 
 
 dotenv.config()
@@ -21,5 +23,8 @@ app.use('/api', elementRoutes)
 app.use('/api', elementExtrasRoutes)
 app.use('/api', placesRoutes)
 app.use('/api', photoRoutes)
+app.use('/api', groupRoutes)
+app.use('/api', programRoutes)
+
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`))
